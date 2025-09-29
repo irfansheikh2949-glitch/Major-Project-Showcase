@@ -1,0 +1,5 @@
+{
+  "name": "Insurance Project Showcase",
+  "description": "A web application showcasing various insurance-related React project prototypes, with an admin-only access portal. The public-facing site provides information about the insurance industry in India.",
+  "requestFramePermissions": []
+}
