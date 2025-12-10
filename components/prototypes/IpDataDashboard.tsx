@@ -2,7 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { 
   ArrowLeft, Search, Filter, Download, Users, CheckCircle, 
-  Clock, AlertTriangle, ChevronLeft, ChevronRight, RefreshCw, FileCheck
+  Clock, AlertTriangle, ChevronLeft, ChevronRight, RefreshCw, FileCheck,
+  Code, Database, Terminal, Copy, Check, Share2
 } from 'lucide-react';
 
 interface PrototypeProps {
@@ -123,11 +124,55 @@ const StatCard = ({ title, value, icon: Icon, color }: any) => (
   </div>
 );
 
+// Simulated API Service
+const IpApiService = {
+  // Simulates a GET request like: GET /api/ip/:code
+  getIpByCode: async (code: string): Promise<IpRecord | null> => {
+    return new Promise((resolve) => {
+      // Simulate network delay
+      setTimeout(() => {
+        const sheet = RAW_DATA_JSON.sheets[0];
+        const headers = sheet.rows[0];
+        // Clean input
+        const cleanCode = code.trim().toUpperCase();
+        
+        // Find record
+        const foundRow = sheet.rows.slice(1).find(row => 
+          (row[0] || '').toUpperCase() === cleanCode
+        );
+        
+        if (foundRow) {
+           const record: any = {};
+           headers.forEach((header, index) => {
+             record[header] = foundRow[index] || '';
+           });
+           resolve(record as IpRecord);
+        } else {
+           resolve(null);
+        }
+      }, 800); 
+    });
+  }
+};
+
 const IpDataDashboard: React.FC<PrototypeProps> = ({ onBack }) => {
+  const [currentTab, setCurrentTab] = useState<'registry' | 'lookup'>('registry');
+  
+  // Registry State
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [filterKYC, setFilterKYC] = useState('All');
   const [filterVerified, setFilterVerified] = useState('All');
+
+  // API Lookup State
+  const [lookupIpCode, setLookupIpCode] = useState('');
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupResult, setLookupResult] = useState<IpRecord | null | 'not_found'>(null);
+  
+  // Developer Tools State
+  const [activeRightTab, setActiveRightTab] = useState<'response' | 'snippets'>('response');
+  const [snippetLang, setSnippetLang] = useState<'curl' | 'node' | 'python'>('curl');
+  const [copied, setCopied] = useState(false);
 
   // Parse raw JSON into usable object array
   const ipData: IpRecord[] = useMemo(() => {
@@ -182,10 +227,76 @@ const IpDataDashboard: React.FC<PrototypeProps> = ({ onBack }) => {
     }
   };
 
+  const handleLookup = async () => {
+    if (!lookupIpCode) return;
+    setLookupLoading(true);
+    setLookupResult(null);
+    setActiveRightTab('response');
+    
+    try {
+      const result = await IpApiService.getIpByCode(lookupIpCode);
+      setLookupResult(result || 'not_found');
+    } catch (e) {
+      console.error(e);
+      setLookupResult('not_found');
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  const generateSnippet = (lang: 'curl' | 'node' | 'python', code: string) => {
+    const targetCode = code || ':ip_code';
+    const baseUrl = 'https://api.insurepro.demo/v1/ip';
+    
+    if (lang === 'curl') {
+      return `curl -X GET "${baseUrl}/${targetCode}" \\
+  -H "Authorization: Bearer <your_api_token>" \\
+  -H "Accept: application/json"`;
+    }
+    if (lang === 'node') {
+      return `const fetch = require('node-fetch');
+
+const url = '${baseUrl}/${targetCode}';
+const options = {
+  method: 'GET',
+  headers: {
+    Accept: 'application/json',
+    Authorization: 'Bearer <your_api_token>'
+  }
+};
+
+fetch(url, options)
+  .then(res => res.json())
+  .then(json => console.log(json))
+  .catch(err => console.error('error:' + err));`;
+    }
+    if (lang === 'python') {
+      return `import requests
+
+url = "${baseUrl}/${targetCode}"
+
+headers = {
+    "Accept": "application/json",
+    "Authorization": "Bearer <your_api_token>"
+}
+
+response = requests.get(url, headers=headers)
+
+print(response.json())`;
+    }
+    return '';
+  };
+
+  const handleCopySnippet = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 p-4 md:p-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <div className="flex items-center gap-4 w-full md:w-auto">
           <button 
             onClick={onBack} 
@@ -199,173 +310,393 @@ const IpDataDashboard: React.FC<PrototypeProps> = ({ onBack }) => {
             <p className="text-gray-500 text-sm">Centralized database of Insurance Point of Sales Persons</p>
           </div>
         </div>
-        <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm">
-          <Download className="h-4 w-4" />
-          <span>Export Data</span>
-        </button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard title="Total IPs Registered" value={stats.total} icon={Users} color="bg-blue-500" />
-        <StatCard title="Verified IPs" value={stats.verified} icon={CheckCircle} color="bg-green-500" />
-        <StatCard title="KYC Approved" value={stats.kycApproved} icon={FileCheck} color="bg-indigo-500" />
-        <StatCard title="Pending Review" value={stats.pending} icon={Clock} color="bg-yellow-500" />
-      </div>
-
-      {/* Filters and Search */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
-            <input 
-              type="text" 
-              placeholder="Search by Name, IP Code or PAN..." 
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            />
-          </div>
-          <div className="flex gap-4 w-full md:w-auto">
-            <div className="relative w-full md:w-48">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs font-semibold">KYC:</span>
-              <select 
-                className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-                value={filterKYC}
-                onChange={(e) => { setFilterKYC(e.target.value); setCurrentPage(1); }}
-              >
-                <option value="All">All Status</option>
-                <option value="Approved">Approved</option>
-                <option value="Pending">Pending</option>
-                <option value="Under Review">Under Review</option>
-                <option value="Rejected">Rejected</option>
-              </select>
-              <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none" />
-            </div>
-            <div className="relative w-full md:w-48">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs font-semibold">Verified:</span>
-              <select 
-                className="w-full pl-16 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-                value={filterVerified}
-                onChange={(e) => { setFilterVerified(e.target.value); setCurrentPage(1); }}
-              >
-                <option value="All">All</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-              </select>
-              <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none" />
-            </div>
-          </div>
+        <div className="flex space-x-2 bg-gray-200 p-1 rounded-lg">
+          <button 
+            onClick={() => setCurrentTab('registry')}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${currentTab === 'registry' ? 'bg-white text-blue-700 shadow' : 'text-gray-600 hover:text-gray-900'}`}
+          >
+            <Database className="inline-block w-4 h-4 mr-2" />
+            Registry
+          </button>
+          <button 
+            onClick={() => setCurrentTab('lookup')}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${currentTab === 'lookup' ? 'bg-white text-blue-700 shadow' : 'text-gray-600 hover:text-gray-900'}`}
+          >
+            <Terminal className="inline-block w-4 h-4 mr-2" />
+            API Lookup
+          </button>
         </div>
       </div>
 
-      {/* Data Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-gray-500">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3">IP Code</th>
-                <th className="px-6 py-3">Name</th>
-                <th className="px-6 py-3">Registration</th>
-                <th className="px-6 py-3">Source</th>
-                <th className="px-6 py-3">Verified</th>
-                <th className="px-6 py-3">Certified</th>
-                <th className="px-6 py-3">PAN Status</th>
-                <th className="px-6 py-3">KYC Status</th>
-                <th className="px-6 py-3">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length > 0 ? (
-                paginatedData.map((row, index) => (
-                  <tr key={index} className="bg-white border-b hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-blue-600">{row.IP_Code}</td>
-                    <td className="px-6 py-4 font-semibold text-gray-900">{row.IP_Name}</td>
-                    <td className="px-6 py-4">
-                      <div>{row.Date_of_Registration}</div>
-                      <div className="text-xs text-gray-400">{row.Time}</div>
-                    </td>
-                    <td className="px-6 py-4">{row.Source}</td>
-                    <td className="px-6 py-4">
-                      <StatusPill status={row.Is_Verified} type="verified" />
-                    </td>
-                    <td className="px-6 py-4">
-                      <StatusPill status={row.Is_Certified} type="verified" />
-                    </td>
-                    <td className="px-6 py-4">
-                      <StatusPill status={row.PAN_Status} type="pan" />
-                    </td>
-                    <td className="px-6 py-4">
-                      <StatusPill status={row.KYC_Status} type="kyc" />
-                    </td>
-                    <td className="px-6 py-4">
-                      <button className="text-indigo-600 hover:text-indigo-900 font-medium text-xs">View Details</button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
-                    <div className="flex flex-col items-center justify-center">
-                      <AlertTriangle className="h-12 w-12 text-yellow-400 mb-2" />
-                      <p className="text-lg font-medium">No records found</p>
-                      <p className="text-sm">Try adjusting your search or filters.</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      {currentTab === 'registry' ? (
+        <>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <StatCard title="Total IPs Registered" value={stats.total} icon={Users} color="bg-blue-500" />
+            <StatCard title="Verified IPs" value={stats.verified} icon={CheckCircle} color="bg-green-500" />
+            <StatCard title="KYC Approved" value={stats.kycApproved} icon={FileCheck} color="bg-indigo-500" />
+            <StatCard title="Pending Review" value={stats.pending} icon={Clock} color="bg-yellow-500" />
+          </div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-gray-200">
-          <span className="text-sm text-gray-700">
-            Showing <span className="font-semibold">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-semibold">{Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)}</span> of <span className="font-semibold">{filteredData.length}</span> entries
-          </span>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum = i + 1;
-                // Simple logic to keep current page centered if possible
-                if (totalPages > 5 && currentPage > 3) {
-                  pageNum = currentPage - 2 + i;
-                }
-                if (pageNum > totalPages) return null;
-
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={`w-8 h-8 rounded-lg text-sm font-medium ${
-                      currentPage === pageNum 
-                        ? 'bg-blue-600 text-white' 
-                        : 'text-gray-700 hover:bg-gray-200'
-                    }`}
+          {/* Filters and Search */}
+          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="relative w-full md:w-96">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input 
+                  type="text" 
+                  placeholder="Search by Name, IP Code or PAN..." 
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={searchTerm}
+                  onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                />
+              </div>
+              <div className="flex gap-4 w-full md:w-auto">
+                <div className="relative w-full md:w-48">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs font-semibold">KYC:</span>
+                  <select 
+                    className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                    value={filterKYC}
+                    onChange={(e) => { setFilterKYC(e.target.value); setCurrentPage(1); }}
                   >
-                    {pageNum}
-                  </button>
-                );
-              })}
+                    <option value="All">All Status</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
+                  <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none" />
+                </div>
+                <div className="relative w-full md:w-48">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs font-semibold">Verified:</span>
+                  <select 
+                    className="w-full pl-16 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                    value={filterVerified}
+                    onChange={(e) => { setFilterVerified(e.target.value); setCurrentPage(1); }}
+                  >
+                    <option value="All">All</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                  <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none" />
+                </div>
+              </div>
             </div>
-            <button 
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
+          </div>
+
+          {/* Data Table */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left text-gray-500">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3">IP Code</th>
+                    <th className="px-6 py-3">Name</th>
+                    <th className="px-6 py-3">Registration</th>
+                    <th className="px-6 py-3">Source</th>
+                    <th className="px-6 py-3">Verified</th>
+                    <th className="px-6 py-3">Certified</th>
+                    <th className="px-6 py-3">PAN Status</th>
+                    <th className="px-6 py-3">KYC Status</th>
+                    <th className="px-6 py-3">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedData.length > 0 ? (
+                    paginatedData.map((row, index) => (
+                      <tr key={index} className="bg-white border-b hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 font-medium text-blue-600">{row.IP_Code}</td>
+                        <td className="px-6 py-4 font-semibold text-gray-900">{row.IP_Name}</td>
+                        <td className="px-6 py-4">
+                          <div>{row.Date_of_Registration}</div>
+                          <div className="text-xs text-gray-400">{row.Time}</div>
+                        </td>
+                        <td className="px-6 py-4">{row.Source}</td>
+                        <td className="px-6 py-4">
+                          <StatusPill status={row.Is_Verified} type="verified" />
+                        </td>
+                        <td className="px-6 py-4">
+                          <StatusPill status={row.Is_Certified} type="verified" />
+                        </td>
+                        <td className="px-6 py-4">
+                          <StatusPill status={row.PAN_Status} type="pan" />
+                        </td>
+                        <td className="px-6 py-4">
+                          <StatusPill status={row.KYC_Status} type="kyc" />
+                        </td>
+                        <td className="px-6 py-4">
+                          <button className="text-indigo-600 hover:text-indigo-900 font-medium text-xs">View Details</button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
+                        <div className="flex flex-col items-center justify-center">
+                          <AlertTriangle className="h-12 w-12 text-yellow-400 mb-2" />
+                          <p className="text-lg font-medium">No records found</p>
+                          <p className="text-sm">Try adjusting your search or filters.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-gray-200">
+              <span className="text-sm text-gray-700">
+                Showing <span className="font-semibold">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-semibold">{Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)}</span> of <span className="font-semibold">{filteredData.length}</span> entries
+              </span>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum = i + 1;
+                    if (totalPages > 5 && currentPage > 3) {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    if (pageNum > totalPages) return null;
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`w-8 h-8 rounded-lg text-sm font-medium ${
+                          currentPage === pageNum 
+                            ? 'bg-blue-600 text-white' 
+                            : 'text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button 
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        /* API Lookup View */
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start animate-fade-in">
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+              <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                <Terminal className="w-5 h-5 mr-2 text-indigo-600" />
+                API Request Simulator
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                Simulate a GET request to retrieve individual IP data by unique IP Code. 
+                Use this tool to verify data before integrating.
+              </p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">IP Code Parameter</label>
+                  <div className="flex">
+                    <input 
+                      type="text" 
+                      placeholder="e.g. IP40001" 
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                      value={lookupIpCode}
+                      onChange={(e) => setLookupIpCode(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
+                    />
+                    <button 
+                      onClick={handleLookup}
+                      disabled={lookupLoading || !lookupIpCode}
+                      className="bg-blue-600 text-white px-6 py-2 rounded-r-lg font-medium hover:bg-blue-700 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                      {lookupLoading ? <RefreshCw className="h-4 w-4 animate-spin mr-2"/> : <Search className="h-4 w-4 mr-2" />}
+                      Fetch Data
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">Try codes like: IP40001, IP40025, IP40050</p>
+                </div>
+              </div>
+              
+              {/* Share API Feature */}
+              <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between">
+                 <div className="text-sm text-gray-600">
+                    Need to share this API with external partners?
+                 </div>
+                 <button 
+                    onClick={() => setActiveRightTab('snippets')}
+                    className="flex items-center text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors"
+                 >
+                    <Share2 className="w-4 h-4 mr-1.5" />
+                    Get Integration Code
+                 </button>
+              </div>
+            </div>
+
+            {lookupResult && lookupResult !== 'not_found' && (
+              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-green-500">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">IP Profile Summary</h3>
+                <div className="flex items-start gap-4">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Users className="w-8 h-8 text-gray-500" />
+                  </div>
+                  <div className="flex-1 grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase">Name</p>
+                      <p className="font-bold text-gray-900">{lookupResult.IP_Name}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase">Code</p>
+                      <p className="font-mono text-sm text-gray-900">{lookupResult.IP_Code}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase">Status</p>
+                      <StatusPill status={lookupResult.Is_Verified} type="verified" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase">Registered</p>
+                      <p className="text-sm text-gray-900">{lookupResult.Date_of_Registration}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-slate-900 rounded-xl shadow-lg overflow-hidden border border-slate-700 h-full min-h-[450px] flex flex-col">
+              
+              {/* Fake Browser/Postman Header */}
+              <div className="bg-slate-800 px-4 py-3 border-b border-slate-700 flex flex-col space-y-3">
+                 {/* URL Bar */}
+                 <div className="flex items-center bg-slate-900 rounded-md border border-slate-600 p-1">
+                    <span className="text-green-400 font-bold px-2 text-xs">GET</span>
+                    <input 
+                       readOnly 
+                       className="bg-transparent border-none text-slate-300 text-sm flex-1 focus:ring-0 px-2 font-mono outline-none"
+                       value={`https://api.insurepro.demo/v1/ip/${lookupIpCode || ':ip_code'}`}
+                    />
+                    <button 
+                       className="p-1.5 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition"
+                       title="Copy Endpoint"
+                       onClick={() => handleCopySnippet(`https://api.insurepro.demo/v1/ip/${lookupIpCode || ':ip_code'}`)}
+                    >
+                       {copied ? <Check size={14} className="text-green-400"/> : <Copy size={14} />}
+                    </button>
+                 </div>
+                 
+                 {/* Tabs */}
+                 <div className="flex space-x-4 text-xs font-medium text-slate-400">
+                    <button 
+                       onClick={() => setActiveRightTab('response')} 
+                       className={`hover:text-white border-b-2 py-1 transition-colors ${activeRightTab === 'response' ? 'border-blue-500 text-white' : 'border-transparent'}`}
+                    >
+                       Response Body
+                    </button>
+                    <button 
+                       onClick={() => setActiveRightTab('snippets')} 
+                       className={`hover:text-white border-b-2 py-1 transition-colors ${activeRightTab === 'snippets' ? 'border-blue-500 text-white' : 'border-transparent'}`}
+                    >
+                       Integration Code
+                    </button>
+                 </div>
+              </div>
+
+              {/* Content Area */}
+              <div className="p-4 overflow-auto flex-1 font-mono text-sm custom-scrollbar relative">
+                 {activeRightTab === 'response' ? (
+                    <>
+                    {lookupLoading ? (
+                      <div className="flex items-center justify-center h-full text-slate-400">
+                        <div className="flex flex-col items-center">
+                          <RefreshCw className="h-8 w-8 animate-spin mb-4 text-blue-500" />
+                          <p>Processing Request...</p>
+                        </div>
+                      </div>
+                    ) : lookupResult ? (
+                      lookupResult === 'not_found' ? (
+                        <div className="text-red-400">
+                          <span className="text-purple-400">Error 404</span>: IP Record Not Found
+                          <br/><br/>
+                          {`{`}
+                          <br/>
+                          &nbsp;&nbsp;<span className="text-blue-300">"error"</span>: <span className="text-green-300">"Record not found"</span>,
+                          <br/>
+                          &nbsp;&nbsp;<span className="text-blue-300">"code"</span>: <span className="text-yellow-300">"{lookupIpCode}"</span>
+                          <br/>
+                          {`}`}
+                        </div>
+                      ) : (
+                        <div className="text-slate-300">
+                          <span className="text-green-400">HTTP 200 OK</span>
+                          <br/><br/>
+                          {`{`}
+                          {Object.entries(lookupResult).map(([key, value]) => (
+                            <div key={key}>
+                              &nbsp;&nbsp;<span className="text-blue-300">"{key}"</span>: <span className="text-orange-300">"{value}"</span>,
+                            </div>
+                          ))}
+                          {`}`}
+                        </div>
+                      )
+                    ) : (
+                      <div className="text-slate-500 text-center mt-20">
+                        <Code className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>Waiting for request...</p>
+                        <p className="text-xs mt-2">Enter an IP Code and click Fetch to see the JSON response.</p>
+                      </div>
+                    )}
+                    </>
+                 ) : (
+                    /* Integration Code Snippets View */
+                    <div className="h-full flex flex-col">
+                       <div className="flex space-x-2 mb-4">
+                          {['curl', 'node', 'python'].map(lang => (
+                             <button
+                                key={lang}
+                                onClick={() => setSnippetLang(lang as any)}
+                                className={`px-3 py-1 rounded text-xs uppercase font-semibold ${snippetLang === lang ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                             >
+                                {lang}
+                             </button>
+                          ))}
+                       </div>
+                       
+                       <div className="flex-1 relative group">
+                          <div className="text-slate-300 whitespace-pre-wrap break-all">
+                             {generateSnippet(snippetLang, lookupIpCode)}
+                          </div>
+                          <button 
+                             onClick={() => handleCopySnippet(generateSnippet(snippetLang, lookupIpCode))}
+                             className="absolute top-0 right-0 p-2 bg-slate-800 rounded text-slate-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                             title="Copy Code"
+                          >
+                             {copied ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+                          </button>
+                       </div>
+                       
+                       <div className="mt-4 pt-4 border-t border-slate-800 text-xs text-slate-500">
+                          <p>Share this snippet with external developers to integrate IP verification into their systems.</p>
+                       </div>
+                    </div>
+                 )}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

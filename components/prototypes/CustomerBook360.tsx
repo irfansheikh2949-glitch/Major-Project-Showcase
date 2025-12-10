@@ -247,28 +247,42 @@ const CustomerBookPage = ({ customers, onSelectCustomer, onAddCustomer, onBack }
         return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${styles[policy.status]}`}>{text[policy.status]}</span>;
     };
     const uniqueCities = useMemo(() => ['all', ...new Set(customers.map(c => c.city))], [customers]);
+    
     // FIX: Explicitly type 'p' to CustomerPolicyDetail to resolve property access errors.
-    const getCustomerTotalPayout = (customer: Customer) => Object.values(customer.policies).reduce((sum, p: CustomerPolicyDetail) => sum + (!p.isDeclined && p.status === 'Opportunity' ? (p.potentialPayout || 0) : 0), 0);
+    const getCustomerTotalPayout = (customer: Customer) => Object.values(customer.policies).reduce((sum: number, p: any) => {
+        const policy = p as CustomerPolicyDetail;
+        return sum + (!policy.isDeclined && policy.status === 'Opportunity' ? (policy.potentialPayout || 0) : 0);
+    }, 0);
     
     const filteredCustomers = useMemo(() => {
         setCurrentPage(1); // Reset to first page on filter change
         const now = new Date('2025-09-20T12:35:00');
         const thirtyDaysFromNow = new Date(now); thirtyDaysFromNow.setDate(now.getDate() + 30);
         const sevenDaysFromNow = new Date(now); sevenDaysFromNow.setDate(now.getDate() + 7);
+
         let baseFiltered = customers.filter(c => {
             const searchMatch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.contact.includes(searchTerm);
             const cityMatch = cityFilter === 'all' || c.city === cityFilter;
+            
             let actionMatch = true;
-            if (activeFilter === 'renewals') { 
-                // FIX: Explicitly type 'p' to CustomerPolicyDetail to resolve property access errors.
-                actionMatch = (Object.values(c.policies) as CustomerPolicyDetail[]).some((p) => p.status === 'Active' && ( (p.renewalDate && new Date(p.renewalDate) >= now && new Date(p.renewalDate) <= thirtyDaysFromNow) || (p.vehicles && p.vehicles.some(v => new Date(v.expiryDate) >= now && new Date(v.expiryDate) <= thirtyDaysFromNow)))); }
-            else if (activeFilter === 'followups') { 
-                // FIX: Explicitly type 'p' to CustomerPolicyDetail to resolve property access errors.
-                actionMatch = (Object.values(c.policies) as CustomerPolicyDetail[]).some((p) => p.followUpDate && new Date(p.followUpDate) >= now && new Date(p.followUpDate) <= sevenDaysFromNow); }
-            else if (activeFilter === 'opportunities') { actionMatch = getCustomerTotalPayout(c) > 0; }
+            if (activeFilter === 'renewals') {
+                actionMatch = Object.values(c.policies).some((p: any) => {
+                    const policy = p as CustomerPolicyDetail;
+                    return policy.status === 'Active' && ( (policy.renewalDate && new Date(policy.renewalDate) >= now && new Date(policy.renewalDate) <= thirtyDaysFromNow) || (policy.vehicles && policy.vehicles.some(v => new Date(v.expiryDate) >= now && new Date(v.expiryDate) <= thirtyDaysFromNow)));
+                });
+            } else if (activeFilter === 'followups') {
+                actionMatch = Object.values(c.policies).some((p: any) => {
+                    const policy = p as CustomerPolicyDetail;
+                    return policy.followUpDate && new Date(policy.followUpDate) >= now && new Date(policy.followUpDate) <= sevenDaysFromNow;
+                });
+            } else if (activeFilter === 'opportunities') {
+                actionMatch = getCustomerTotalPayout(c) > 0;
+            }
             return searchMatch && cityMatch && actionMatch;
         });
+
         if (activeFilter === 'opportunities') baseFiltered.sort((a, b) => getCustomerTotalPayout(b) - getCustomerTotalPayout(a));
+        
         return baseFiltered;
     }, [customers, searchTerm, activeFilter, cityFilter]);
 
@@ -285,9 +299,17 @@ const CustomerBookPage = ({ customers, onSelectCustomer, onAddCustomer, onBack }
         }, { health: 0, life: 0, motor: 0, total: 0 }), [filteredCustomers]);
 
     // FIX: Explicitly type 'p' to CustomerPolicyDetail to resolve property access errors.
+    const upcomingRenewalsCount = useMemo(() => customers.filter(c => Object.values(c.policies).some((p: any) => {
+        const policy = p as CustomerPolicyDetail;
+        return policy.status === 'Active' && ( (policy.renewalDate && new Date(policy.renewalDate) <= new Date(new Date().setDate(new Date().getDate() + 30))) || (policy.vehicles && policy.vehicles.some(v => new Date(v.expiryDate) <= new Date(new Date().setDate(new Date().getDate() + 30)))));
+    })).length, [customers]);
+
+    const followUpsCount = useMemo(() => customers.filter(c => Object.values(c.policies).some((p: any) => {
+        const policy = p as CustomerPolicyDetail;
+        return policy.followUpDate && new Date(policy.followUpDate) <= new Date(new Date().setDate(new Date().getDate() + 7));
+    })).length, [customers]);
+    
     const opportunitiesCount = useMemo(() => customers.filter(c => getCustomerTotalPayout(c) > 0).length, [customers]);
-    const upcomingRenewalsCount = useMemo(() => customers.filter(c => (Object.values(c.policies) as CustomerPolicyDetail[]).some((p) => p.status === 'Active' && ( (p.renewalDate && new Date(p.renewalDate) <= new Date(new Date().setDate(new Date().getDate() + 30))) || (p.vehicles && p.vehicles.some(v => new Date(v.expiryDate) <= new Date(new Date().setDate(new Date().getDate() + 30))))))).length, [customers]);
-    const followUpsCount = useMemo(() => customers.filter(c => (Object.values(c.policies) as CustomerPolicyDetail[]).some((p) => p.followUpDate && new Date(p.followUpDate) <= new Date(new Date().setDate(new Date().getDate() + 7)))).length, [customers]);
     
     return (
     <>
@@ -385,7 +407,7 @@ const CustomerProfile = ({ onNavigateBack, customer, onUpdateCustomer }: { onNav
     };
     const getNextFollowUp = (policies) => {
         const today = new Date('2025-09-20');
-        const followUpDates = Object.values(policies).filter(p => p.status === 'Opportunity' && !p.isDeclined && p.followUpDate).map(p => new Date(p.followUpDate!)).filter(date => date >= today);
+        const followUpDates = Object.values(policies).filter((p: any) => p.status === 'Opportunity' && !p.isDeclined && p.followUpDate).map((p: any) => new Date(p.followUpDate!)).filter(date => date >= today);
         if (followUpDates.length === 0) return null;
         const nextDate = new Date(Math.min.apply(null, followUpDates as any));
         return nextDate.toISOString().split('T')[0];
