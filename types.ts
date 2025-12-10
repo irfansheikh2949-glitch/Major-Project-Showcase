@@ -8,7 +8,8 @@ export type Page =
   | 'servicePerformanceDashboard'
   | 'customerBook360'
   | 'partnerPayoutDashboard'
-  | 'partner360';
+  | 'partner360'
+  | 'ipData';
 
 export interface Project {
   id: Page;

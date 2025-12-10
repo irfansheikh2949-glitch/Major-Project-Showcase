@@ -228,7 +228,7 @@ const mockCustomers: Customer[] = [
   },
   // FIX: Added missing 'alternateContact' property to ensure type conformity.
   {
-    id: 4, name: 'Kavita Singh', contact: '+91 99887 76655', alternateContact: null, email: 'kavita.s@example.com', city: 'Delhi', area: 'Dwarka', dob: '1985-01-25', maritalStatus: 'Married', occupation: 'Teacher', leadSource: 'Referral', vehicleCount: 1, familyMembers: [], activityLog: [],
+    id: 4, name: 'Kavita Singh', contact: '+91 99887 76655', alternateContact: null, email: 'kavita.s@example.com', city: 'Delhi', area: 'Dwarka', fullAddress: '', dob: '1985-01-25', maritalStatus: 'Married', occupation: 'Teacher', leadSource: 'Referral', vehicleCount: 1, familyMembers: [], activityLog: [],
     policies: {
       health: { status: 'Opportunity', isDeclined: true, declineReason: 'Already covered by spouse\'s corporate policy.' },
       life: { status: 'OutOfScope', reason: 'Not interested currently.', isDeclined: false },
@@ -236,7 +236,7 @@ const mockCustomers: Customer[] = [
     }
   },
   {
-    id: 5, name: 'Arjun Mehta', contact: '+91 91234 56789', alternateContact: null, email: 'arjun.m@example.com', city: 'Mumbai', area: 'Andheri', dob: '1995-06-30', maritalStatus: 'Single', occupation: 'Analyst', leadSource: 'Website Inquiry', vehicleCount: 1, familyMembers: [], activityLog: [],
+    id: 5, name: 'Arjun Mehta', contact: '+91 91234 56789', alternateContact: null, email: 'arjun.m@example.com', city: 'Mumbai', area: 'Andheri', fullAddress: '', dob: '1995-06-30', maritalStatus: 'Single', occupation: 'Analyst', leadSource: 'Website Inquiry', vehicleCount: 1, familyMembers: [], activityLog: [],
     policies: {
       health: { status: 'Active', isDeclined: false, policies: [{ id: 'H5', insurer: 'Niva Bupa', plan: 'ReAssure 2.0', sumInsured: 750000, premium: 12000, renewalDate: '2026-08-01' }] },
       life: { status: 'Active', isDeclined: false, policies: [{ id: 'L5', insurer: 'HDFC Life', plan: 'Click 2 Protect', planType: 'Term', sumInsured: 15000000, insuredName: 'Arjun Mehta', renewalDate: '2026-09-15' }] },
@@ -244,7 +244,7 @@ const mockCustomers: Customer[] = [
     }
   },
   {
-    id: 6, name: 'Sunita Patil', contact: '+91 88776 65544', alternateContact: null, email: 'sunita.p@example.com', city: 'Pune', area: 'Kothrud', dob: '1980-12-12', maritalStatus: 'Married', occupation: 'Homemaker', leadSource: 'Walk-in', vehicleCount: 1, familyMembers: [{id: 601, name: 'Ramesh Patil', relationship: 'Spouse'}], activityLog: [],
+    id: 6, name: 'Sunita Patil', contact: '+91 88776 65544', alternateContact: null, email: 'sunita.p@example.com', city: 'Pune', area: 'Kothrud', fullAddress: '', dob: '1980-12-12', maritalStatus: 'Married', occupation: 'Homemaker', leadSource: 'Walk-in', vehicleCount: 1, familyMembers: [{id: 601, name: 'Ramesh Patil', relationship: 'Spouse'}], activityLog: [],
     policies: {
       health: { status: 'Active', isDeclined: false, policies: [{ id: 'H6', insurer: 'Care Health', plan: 'Care Supreme', sumInsured: 1000000, premium: 28000, renewalDate: '2026-04-20' }] },
       life: { status: 'Active', isDeclined: false, policies: [{ id: 'L6', insurer: 'Bajaj Allianz Life', plan: 'Guaranteed Income Goal', planType: 'Savings', sumInsured: 2500000, insuredName: 'Ramesh Patil', renewalDate: '2026-04-20' }] },
@@ -252,7 +252,7 @@ const mockCustomers: Customer[] = [
     }
   },
   {
-    id: 7, name: 'Vikram Rathore', contact: '+91 77665 54433', alternateContact: null, email: 'vikram.r@example.com', city: 'Jaipur', area: 'Vaishali Nagar', dob: '1990-07-18', maritalStatus: 'Single', occupation: 'Startup Founder', leadSource: 'LinkedIn', vehicleCount: 1, familyMembers: [], activityLog: [],
+    id: 7, name: 'Vikram Rathore', contact: '+91 77665 54433', alternateContact: null, email: 'vikram.r@example.com', city: 'Jaipur', area: 'Vaishali Nagar', fullAddress: '', dob: '1990-07-18', maritalStatus: 'Single', occupation: 'Startup Founder', leadSource: 'LinkedIn', vehicleCount: 1, familyMembers: [], activityLog: [],
     policies: {
       health: { status: 'OutOfScope', reason: 'Covered by company.', isDeclined: false },
       life: { status: 'Opportunity', reason: 'Keyman insurance for business.', tentativePremium: 75000, potentialPayout: 11250, followUpDate: '2025-11-01', isDeclined: false, leadDetails: { suggestedInsurer: 'Tata AIA', suggestedPlan: 'Sampoorna Raksha Supreme', suggestedSumInsured: 20000000 } },
@@ -260,7 +260,7 @@ const mockCustomers: Customer[] = [
     }
   },
   {
-    id: 8, name: 'Anjali Desai', contact: '+91 66554 43322', alternateContact: null, email: 'anjali.d@example.com', city: 'Bangalore', area: 'Koramangala', dob: '1998-03-03', maritalStatus: 'Single', occupation: 'Student', leadSource: 'Website Inquiry', vehicleCount: 0, familyMembers: [], activityLog: [],
+    id: 8, name: 'Anjali Desai', contact: '+91 66554 43322', alternateContact: null, email: 'anjali.d@example.com', city: 'Bangalore', area: 'Koramangala', fullAddress: '', dob: '1998-03-03', maritalStatus: 'Single', occupation: 'Student', leadSource: 'Website Inquiry', vehicleCount: 0, familyMembers: [], activityLog: [],
     policies: {
       health: { status: 'Opportunity', reason: 'First-time health insurance.', tentativePremium: 9000, potentialPayout: 1350, followUpDate: '2025-09-28', isDeclined: false, leadDetails: { suggestedInsurer: 'Digit Health', suggestedPlan: 'Arogya Sanjeevani', suggestedSumInsured: 500000 } },
       life: { status: 'OutOfScope', reason: 'Not a priority.', isDeclined: false },
@@ -268,7 +268,7 @@ const mockCustomers: Customer[] = [
     }
   },
   {
-    id: 9, name: 'Suresh Gupta', contact: '+91 98765 12345', alternateContact: null, email: 'suresh.g@example.com', city: 'Mumbai', area: 'Borivali', dob: '1975-08-20', maritalStatus: 'Married', occupation: 'Trader', leadSource: 'Referral', vehicleCount: 2, familyMembers: [{id: 901, name: 'Leela Gupta', relationship: 'Spouse'}], activityLog: [],
+    id: 9, name: 'Suresh Gupta', contact: '+91 98765 12345', alternateContact: null, email: 'suresh.g@example.com', city: 'Mumbai', area: 'Borivali', fullAddress: '', dob: '1975-08-20', maritalStatus: 'Married', occupation: 'Trader', leadSource: 'Referral', vehicleCount: 2, familyMembers: [{id: 901, name: 'Leela Gupta', relationship: 'Spouse'}], activityLog: [],
     policies: {
       health: { status: 'Active', isDeclined: false, policies: [{ id: 'H9', insurer: 'Aditya Birla', plan: 'Activ Health Platinum', sumInsured: 2000000, premium: 45000, renewalDate: '2026-02-10' }] },
       life: { status: 'Opportunity', reason: 'Child\'s education plan.', tentativePremium: 120000, potentialPayout: 18000, followUpDate: '2025-10-20', isDeclined: false, leadDetails: { suggestedInsurer: 'LIC', suggestedPlan: 'Jeevan Tarun', suggestedSumInsured: 5000000 } },
@@ -279,7 +279,7 @@ const mockCustomers: Customer[] = [
     }
   },
   {
-    id: 10, name: 'Neha Agarwal', contact: '+91 87654 54321', alternateContact: null, email: 'neha.a@example.com', city: 'Delhi', area: 'Saket', dob: '1993-05-10', maritalStatus: 'Single', occupation: 'Marketing Manager', leadSource: 'Website Inquiry', vehicleCount: 1, familyMembers: [], activityLog: [],
+    id: 10, name: 'Neha Agarwal', contact: '+91 87654 54321', alternateContact: null, email: 'neha.a@example.com', city: 'Delhi', area: 'Saket', fullAddress: '', dob: '1993-05-10', maritalStatus: 'Single', occupation: 'Marketing Manager', leadSource: 'Website Inquiry', vehicleCount: 1, familyMembers: [], activityLog: [],
     policies: {
       health: { status: 'Opportunity', reason: 'Looking for comprehensive cover.', tentativePremium: 15000, potentialPayout: 2250, followUpDate: '2025-10-08', isDeclined: false, leadDetails: { suggestedInsurer: 'Star Health', suggestedPlan: 'Comprehensive', suggestedSumInsured: 1000000 } },
       life: { status: 'Opportunity', reason: 'Tax saving & investment.', tentativePremium: 50000, potentialPayout: 7500, followUpDate: '2025-10-12', isDeclined: false, leadDetails: { suggestedInsurer: 'ICICI Pru', suggestedPlan: 'Signature', suggestedSumInsured: 10000000 } },
@@ -570,10 +570,10 @@ const CustomerBookPage = ({ customers, onSelectCustomer, onAddCustomer }: { cust
             let actionMatch = true;
             if (activeFilter === 'renewals') {
                 // FIX: Explicitly type 'p' to CustomerPolicyDetail to resolve property access errors.
-                actionMatch = Object.values(c.policies).some((p: CustomerPolicyDetail) => p.status === 'Active' && ( (p.renewalDate && new Date(p.renewalDate) >= now && new Date(p.renewalDate) <= thirtyDaysFromNow) || (p.vehicles && p.vehicles.some(v => new Date(v.expiryDate) >= now && new Date(v.expiryDate) <= thirtyDaysFromNow))));
+                actionMatch = (Object.values(c.policies) as CustomerPolicyDetail[]).some((p) => p.status === 'Active' && ( (p.renewalDate && new Date(p.renewalDate) >= now && new Date(p.renewalDate) <= thirtyDaysFromNow) || (p.vehicles && p.vehicles.some(v => new Date(v.expiryDate) >= now && new Date(v.expiryDate) <= thirtyDaysFromNow))));
             } else if (activeFilter === 'followups') {
                 // FIX: Explicitly type 'p' to CustomerPolicyDetail to resolve property access errors.
-                actionMatch = Object.values(c.policies).some((p: CustomerPolicyDetail) => p.followUpDate && new Date(p.followUpDate) >= now && new Date(p.followUpDate) <= sevenDaysFromNow);
+                actionMatch = (Object.values(c.policies) as CustomerPolicyDetail[]).some((p) => p.followUpDate && new Date(p.followUpDate) >= now && new Date(p.followUpDate) <= sevenDaysFromNow);
             } else if (activeFilter === 'opportunities') {
                 actionMatch = getCustomerTotalPayout(c) > 0;
             }
@@ -603,8 +603,8 @@ const CustomerBookPage = ({ customers, onSelectCustomer, onAddCustomer }: { cust
     }, [filteredCustomers]);
 
     // FIX: Explicitly type 'p' to CustomerPolicyDetail to resolve property access errors.
-    const upcomingRenewalsCount = useMemo(() => customers.filter(c => Object.values(c.policies).some((p: CustomerPolicyDetail) => p.status === 'Active' && ( (p.renewalDate && new Date(p.renewalDate) <= new Date(new Date().setDate(new Date().getDate() + 30))) || (p.vehicles && p.vehicles.some(v => new Date(v.expiryDate) <= new Date(new Date().setDate(new Date().getDate() + 30))))))).length, [customers]);
-    const followUpsCount = useMemo(() => customers.filter(c => Object.values(c.policies).some((p: CustomerPolicyDetail) => p.followUpDate && new Date(p.followUpDate) <= new Date(new Date().setDate(new Date().getDate() + 7)))).length, [customers]);
+    const upcomingRenewalsCount = useMemo(() => customers.filter(c => (Object.values(c.policies) as CustomerPolicyDetail[]).some((p) => p.status === 'Active' && ( (p.renewalDate && new Date(p.renewalDate) <= new Date(new Date().setDate(new Date().getDate() + 30))) || (p.vehicles && p.vehicles.some(v => new Date(v.expiryDate) <= new Date(new Date().setDate(new Date().getDate() + 30))))))).length, [customers]);
+    const followUpsCount = useMemo(() => customers.filter(c => (Object.values(c.policies) as CustomerPolicyDetail[]).some((p) => p.followUpDate && new Date(p.followUpDate) <= new Date(new Date().setDate(new Date().getDate() + 7)))).length, [customers]);
     const opportunitiesCount = useMemo(() => customers.filter(c => getCustomerTotalPayout(c) > 0).length, [customers]);
     
     const ActionFilterButton = ({ type, count, icon: Icon, color, label }) => {
@@ -1024,7 +1024,7 @@ const EndorsementManagement = ({ partner }) => {
 
 const PreSalesManagement = ({ partner }) => {
     const [activeTab, setActiveTab] = useState('quotes');
-    const tables: Record<string, { headers: string[], data: (string | JSX.Element)[][] }> = {
+    const tables: Record<string, { headers: string[], data: (string | React.ReactNode)[][] }> = {
       quotes: { headers: ['Quote ID', 'Type', 'Premium', 'Status', 'Date'], data: partner.preSales.quotes.map(q => [q.id, q.type, q.premium, <StatusBadge status={q.status} />, q.date])},
       inspections: { headers: ['Inspection ID', 'Vehicle Reg.', 'Status', 'Scheduled Date'], data: partner.preSales.inspections.map(i => [i.id, i.vehicle, <StatusBadge status={i.status} />, i.date])},
       healthMedicals: { headers: ['Test ID', 'Applicant', 'Status', 'Scheduled Date'], data: partner.preSales.healthMedicals.map(m => [m.id, m.applicant, <StatusBadge status={m.status} />, m.date])},

@@ -261,10 +261,10 @@ const CustomerBookPage = ({ customers, onSelectCustomer, onAddCustomer, onBack }
             let actionMatch = true;
             if (activeFilter === 'renewals') { 
                 // FIX: Explicitly type 'p' to CustomerPolicyDetail to resolve property access errors.
-                actionMatch = Object.values(c.policies).some((p: CustomerPolicyDetail) => p.status === 'Active' && ( (p.renewalDate && new Date(p.renewalDate) >= now && new Date(p.renewalDate) <= thirtyDaysFromNow) || (p.vehicles && p.vehicles.some(v => new Date(v.expiryDate) >= now && new Date(v.expiryDate) <= thirtyDaysFromNow)))); }
+                actionMatch = (Object.values(c.policies) as CustomerPolicyDetail[]).some((p) => p.status === 'Active' && ( (p.renewalDate && new Date(p.renewalDate) >= now && new Date(p.renewalDate) <= thirtyDaysFromNow) || (p.vehicles && p.vehicles.some(v => new Date(v.expiryDate) >= now && new Date(v.expiryDate) <= thirtyDaysFromNow)))); }
             else if (activeFilter === 'followups') { 
                 // FIX: Explicitly type 'p' to CustomerPolicyDetail to resolve property access errors.
-                actionMatch = Object.values(c.policies).some((p: CustomerPolicyDetail) => p.followUpDate && new Date(p.followUpDate) >= now && new Date(p.followUpDate) <= sevenDaysFromNow); }
+                actionMatch = (Object.values(c.policies) as CustomerPolicyDetail[]).some((p) => p.followUpDate && new Date(p.followUpDate) >= now && new Date(p.followUpDate) <= sevenDaysFromNow); }
             else if (activeFilter === 'opportunities') { actionMatch = getCustomerTotalPayout(c) > 0; }
             return searchMatch && cityMatch && actionMatch;
         });
@@ -286,8 +286,8 @@ const CustomerBookPage = ({ customers, onSelectCustomer, onAddCustomer, onBack }
 
     // FIX: Explicitly type 'p' to CustomerPolicyDetail to resolve property access errors.
     const opportunitiesCount = useMemo(() => customers.filter(c => getCustomerTotalPayout(c) > 0).length, [customers]);
-    const upcomingRenewalsCount = useMemo(() => customers.filter(c => Object.values(c.policies).some((p: CustomerPolicyDetail) => p.status === 'Active' && ( (p.renewalDate && new Date(p.renewalDate) <= new Date(new Date().setDate(new Date().getDate() + 30))) || (p.vehicles && p.vehicles.some(v => new Date(v.expiryDate) <= new Date(new Date().setDate(new Date().getDate() + 30))))))).length, [customers]);
-    const followUpsCount = useMemo(() => customers.filter(c => Object.values(c.policies).some((p: CustomerPolicyDetail) => p.followUpDate && new Date(p.followUpDate) <= new Date(new Date().setDate(new Date().getDate() + 7)))).length, [customers]);
+    const upcomingRenewalsCount = useMemo(() => customers.filter(c => (Object.values(c.policies) as CustomerPolicyDetail[]).some((p) => p.status === 'Active' && ( (p.renewalDate && new Date(p.renewalDate) <= new Date(new Date().setDate(new Date().getDate() + 30))) || (p.vehicles && p.vehicles.some(v => new Date(v.expiryDate) <= new Date(new Date().setDate(new Date().getDate() + 30))))))).length, [customers]);
+    const followUpsCount = useMemo(() => customers.filter(c => (Object.values(c.policies) as CustomerPolicyDetail[]).some((p) => p.followUpDate && new Date(p.followUpDate) <= new Date(new Date().setDate(new Date().getDate() + 7)))).length, [customers]);
     
     return (
     <>

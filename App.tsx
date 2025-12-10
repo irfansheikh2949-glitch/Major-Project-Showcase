@@ -12,6 +12,7 @@ import ServicePerformanceDashboard from './components/prototypes/ServicePerforma
 import CustomerBook360 from './components/prototypes/CustomerBook360';
 import PartnerPayoutDashboard from './components/prototypes/PartnerPayoutDashboard';
 import Partner360 from './components/prototypes/Partner360';
+import IpDataDashboard from './components/prototypes/IpDataDashboard';
 
 const projects: Project[] = [
   { id: 'auditPortal', title: 'Audit Portal', description: 'A comprehensive portal for internal and external audits.' },
@@ -20,6 +21,7 @@ const projects: Project[] = [
   { id: 'customerBook360', title: 'Customer Book 360', description: 'A 360-degree view of the customer portfolio.' },
   { id: 'partnerPayoutDashboard', title: 'Partner Payout Dashboard', description: 'Manage and track payouts for partners and agents.' },
   { id: 'partner360', title: 'Partner 360', description: 'An all-in-one portal for managing partner relationships.' },
+  { id: 'ipData', title: 'IP Registration Data', description: 'Centralized registry and status tracking for Insurance POSPs (IPs).' },
 ];
 
 const PROTECTED_PAGES: Page[] = [
@@ -29,7 +31,8 @@ const PROTECTED_PAGES: Page[] = [
   'servicePerformanceDashboard',
   'customerBook360',
   'partnerPayoutDashboard',
-  'partner360'
+  'partner360',
+  'ipData'
 ];
 
 const App: React.FC = () => {
@@ -76,6 +79,8 @@ const App: React.FC = () => {
         return <PartnerPayoutDashboard onBack={onBackToShowcase} />;
       case 'partner360':
         return <Partner360 onBack={onBackToShowcase} />;
+      case 'ipData':
+        return <IpDataDashboard onBack={onBackToShowcase} />;
       default:
         return <HomePage onNavigateAdmin={() => handleNavigate('login')} />;
     }

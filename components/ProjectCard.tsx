@@ -14,6 +14,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
     customerBook360: 'customer,profile',
     partnerPayoutDashboard: 'money,payout',
     partner360: 'partner,network',
+    ipData: 'database,registry',
   };
 
   const seed = imageSeeds[project.id] || project.id;
